@@ -1,29 +1,30 @@
 #!/usr/bin/python3
-"""Script to return the status of an API"""
+"""flask setup"""
 from api.v1.views import app_views
 from flask import Flask, jsonify
+from flask_cors import CORS
 from models import storage
 from os import getenv
 
-
 app = Flask(__name__)
-app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
 app.register_blueprint(app_views)
-
-
-@app.errorhandler(404)
-def error_page(error):
-    """Return error page if specified page is unreachable"""
-    return jsonify({"error": "Not found"}), 404
+app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
+cors = CORS(app, resources={r"/api/v1/*": {"origins": "0.0.0.0"}})
 
 
 @app.teardown_appcontext
-def teardown_db(self):
-    """tear down db"""
+def tear_down(exc):
+    """teardown method"""
     storage.close()
 
 
-if __name__ == "__main__":
+@app.errorhandler(404)
+def page_not_found(error):
+    """404 error"""
+    return jsonify(error="Not found"), 404
+
+
+if __name__ == '__main__':
     host = getenv('HBNB_API_HOST') or '0.0.0.0'
     port = getenv('HBNB_API_PORT') or 5000
     app.run(host=host, port=port, threaded=True)
